@@ -1,0 +1,10 @@
+Select an Audit Policy:
+1. Adtran
+2. Alcatel
+3. amazon_aws
+4. Arista
+5. AS400
+6. BlueCoat
+7. Brocade
+8. Windows
+9. WindowsFileAnalysis
