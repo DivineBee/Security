@@ -8,11 +8,13 @@ import argparse
 import datetime
 import re
 import sys
+import json
+from tkinter import *
 
 regexes = {
   'open': re.compile('^[ \t]*<(item|custom_item|report|if|then|else|condition)[ \t>]'),
   'close': re.compile('^[ \t]*</(item|custom_item|report|if|then|else|condition)[ \t>]'),
-  'description': re.compile('^[ \t]*.*[ \t]*:[ \t]*["\'].'),
+  'description': re.compile('^[ \t]*\w*[ \t]*:[ \t]*["\']'),
 }
 
 show_verbose = False
@@ -56,11 +58,12 @@ def display(message, verbose=False, exit=0):
     if exit > 0:
         out = sys.stderr
 
-    if verbose and show_verbose:
-        out.write(message.rstrip() + '\n')
-    elif not verbose:
-        out.write(message.rstrip() + '\n')
-
+    # if verbose and show_verbose:
+    #     out.write(message.rstrip()  +'\n')
+    # elif not verbose:
+    #     out.write(message.rstrip() + '\n')
+    #out.write(message.rstrip() + '\n')
+    text.insert(END,message.rstrip()+'\n')
     if exit > 0:
         sys.exit(exit)
 
@@ -91,13 +94,13 @@ def compute_audit_structure(content=None):
     lines = []
     audit = []
     stack = []
-
+    tofile={}
     if content is not None:
         lines = [l.strip() for l in content.split('\n')]
         for n in range(len(lines)):
             if regexes['open'].match(lines[n]):
                 finds = regexes['open'].findall(lines[n])
-                audit.append((n + 1, len(stack),"TAG", lines[n]))
+                audit.append(("TAG", lines[n]))
                 stack.append(finds[0])
             elif regexes['close'].match(lines[n]):
                 finds = regexes['close'].findall(lines[n])
@@ -116,20 +119,25 @@ def compute_audit_structure(content=None):
                 for d in desc:
                     description+=d
                 key="".join(lines[n].split(':')[0:1]).strip()
-                audit.append((n + 1, len(stack),key, description))
-
+                audit.append((key, description))
+                tofile[key]=description
+    with open('data.txt', 'w') as outfile:
+        json.dump(tofile, outfile)
     return audit
 
 
 def output_structure(structure=[]):
     width = len(str(structure[-1][0]))
-    form = 'Line {} Depth: {} Key: {}\n \t\t\t\tValue: {}'
+    form = 'Key: {}\n \t\t\t\tValue: {}'
 
-    for (line, depth,key, text) in structure:
-        display(form.format(line,depth,key,text))
+    for (key, text) in structure:
+        display(form.format(key,text))
 
 
 if __name__ == '__main__':
+    root = Tk()
+    text = Text()
+
     args = parse_args(sys.argv[1:])
     display('Start', verbose=True)
     display('Reading file values', verbose=True)
@@ -139,3 +147,7 @@ if __name__ == '__main__':
     display('Outputing structure', verbose=True)
     output_structure(structure)
     display('Done', verbose=True)
+    text.pack()
+    root.mainloop()
+
+
