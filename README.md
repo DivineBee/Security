@@ -12,9 +12,8 @@ configurations based on community best practices.
 * [Status](#status)
 
 ## Technologies
-* Tech 1 - version 1.0
-* Tech 2 - version 2.0
-* Tech 3 - version 3.0
+Python3 and Tkinter  
+Working IDE: PyCharm
 
 ## How to run
 1. First Select the audit you want to parse  
