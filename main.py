@@ -1,5 +1,5 @@
 import requests
-import inquirer
+#import inquirer
 
 import tarfile
 import glob
