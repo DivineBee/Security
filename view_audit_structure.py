@@ -12,9 +12,9 @@ import json
 from tkinter import *
 
 regexes = {
-  'open': re.compile('^[ \t]*<(item|custom_item|report|if|then|else|condition)[ \t>]'),
-  'close': re.compile('^[ \t]*</(item|custom_item|report|if|then|else|condition)[ \t>]'),
-  'description': re.compile('^[ \t]*\w*[ \t]*:[ \t]*["\']'),
+    'open': re.compile('^[ \t]*<(item|custom_item|report|if|then|else|condition)[ \t>]'),
+    'close': re.compile('^[ \t]*</(item|custom_item|report|if|then|else|condition)[ \t>]'),
+    'description': re.compile('^[ \t]*\w*[ \t]*:[ \t]*[\["\'\w+]'),
 }
 
 show_verbose = False
@@ -24,7 +24,7 @@ show_time = False
 def parse_args(parameters):
     global show_time, show_verbose
 
-    parser = argparse.ArgumentParser(description=('Display audit structure'))
+    parser = argparse.ArgumentParser(description='Display audit structure')
 
     parser.add_argument('-t', '--timestamp', action='store_true',
                         help='show timestamp on output')
@@ -35,13 +35,6 @@ def parse_args(parameters):
                         help='audit file to view')
 
     args = parser.parse_args(parameters)
-
-    if args.timestamp:
-        show_time = True
-    if args.verbose:
-        show_verbose = True
-
-    args.audit = make_list(args.audit)[0]
 
     return args
 
@@ -57,13 +50,7 @@ def display(message, verbose=False, exit=0):
     out = sys.stdout
     if exit > 0:
         out = sys.stderr
-
-    # if verbose and show_verbose:
-    #     out.write(message.rstrip()  +'\n')
-    # elif not verbose:
-    #     out.write(message.rstrip() + '\n')
-    #out.write(message.rstrip() + '\n')
-    text.insert(END,message.rstrip()+'\n')
+    return message.rstrip() + '\n'
     if exit > 0:
         sys.exit(exit)
 
@@ -94,14 +81,16 @@ def compute_audit_structure(content=None):
     lines = []
     audit = []
     stack = []
-    tofile={}
+    tofile = []
+    record = {}
     if content is not None:
         lines = [l.strip() for l in content.split('\n')]
         for n in range(len(lines)):
             if regexes['open'].match(lines[n]):
                 finds = regexes['open'].findall(lines[n])
-                audit.append(("TAG", lines[n]))
+                # audit.append(("TAG", lines[n]))
                 stack.append(finds[0])
+                record = {}
             elif regexes['close'].match(lines[n]):
                 finds = regexes['close'].findall(lines[n])
                 if len(stack) == 0:
@@ -112,42 +101,33 @@ def compute_audit_structure(content=None):
                 else:
                     msg = 'Unbalanced tag: {} - {} (line {})'
                     display(msg.format(stack[-1], finds[0], n), exit=2)
+                if len(record) != 0:
+                    audit.append(record)
+                record = {}
             elif regexes['description'].match(lines[n]):
-                #description = ':'.join(lines[n].split(':')[0:]).strip()[0:-1]
                 desc = lines[n].split(':')[1:]
-                description=""
+                description = ""
                 for d in desc:
-                    description+=d
-                key="".join(lines[n].split(':')[0:1]).strip()
-                audit.append((key, description))
-                tofile[key]=description
-    with open('data.txt', 'w') as outfile:
-        json.dump(tofile, outfile)
+                    description += d
+                key = "".join(lines[n].split(':')[0:1]).strip()
+                record[key] = description
     return audit
 
 
 def output_structure(structure=[]):
-    width = len(str(structure[-1][0]))
     form = 'Key: {}\n \t\t\t\tValue: {}'
 
     for (key, text) in structure:
-        display(form.format(key,text))
+        display(form.format(key, text))
 
 
-if __name__ == '__main__':
-    root = Tk()
-    text = Text()
-
-    args = parse_args(sys.argv[1:])
+def main(auditstr):
     display('Start', verbose=True)
     display('Reading file values', verbose=True)
-    audit = read_file(args.audit)
+    audit = read_file(auditstr)
     display('Computing audit structure', verbose=True)
     structure = compute_audit_structure(audit)
-    display('Outputing structure', verbose=True)
-    output_structure(structure)
-    display('Done', verbose=True)
-    text.pack()
-    root.mainloop()
-
-
+    f = open('data.txt', 'w')
+    f.write(str(structure))
+    f.close()
+    return structure
