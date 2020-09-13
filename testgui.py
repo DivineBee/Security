@@ -3,7 +3,7 @@ from tkinter import filedialog as fd
 
 
 def insertText():
-    file_name = fd.askopenfilename(initialdir="B:\\PROG\\PROJECTS\\PYTHON\\Security\\portal_audits")
+    file_name = fd.askopenfilename(initialdir="../portal_audits")
     f = open(file_name)
     s = f.read()
     text.insert(1.0, s)
