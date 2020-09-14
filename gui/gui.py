@@ -1,4 +1,6 @@
 import glob
+import json
+import pickle
 import tarfile
 from tkinter import *
 from tkinter import ttk
@@ -15,11 +17,22 @@ frame = ttk.Frame(main, padding=(4, 4, 16, 16))
 frame.grid(column=0, row=0)
 previous = []
 index = 0
-
 arr = []
+matching=[]
+querry=StringVar()
+
 valori = StringVar()
 tofile = []  # the array of configurations to be send to file
-
+structure=[]
+def entersearch(evt):
+    search()
+def search():
+    global structure
+    q = querry.get()
+    arr=[struct['description'] for struct in structure if q.lower() in struct['description'].lower()]
+    global matching
+    matching=[struct for struct in structure if q in struct['description']]
+    valori.set(arr)
 
 def on_select_configuration(evt):
     global previous
@@ -34,16 +47,24 @@ def on_select_configuration(evt):
 
     text.delete(1.0, END)
     str = '\n'
-    for key in structure[index]:
-        str += key + ':' + structure[index][key] + '\n'
+    for key in matching[index]:
+        str += key + ':' + matching[index][key] + '\n'
     text.insert(END, str)
 
 
 def import_audit():
+    global arr
     file_name = fd.askopenfilename(initialdir="../portal_audits")  # ../portal_audits/Windows
+    if file_name:
+        arr = []
     global structure
     structure = view_audit_structure.main(file_name)
-
+    global matching
+    matching=structure
+    if len(structure)==0:
+        f=open(file_name,'r')
+        structure=json.loads(f.read())
+        f.close()
     for struct in structure:
         if 'description' in struct:
             arr.append(struct['description'])
@@ -65,8 +86,8 @@ def save_config():
     file = open(file_name, 'w')
     selection = lstbox.curselection()
     for i in selection:
-        tofile.append(structure[i])
-    file.write(str(tofile))
+        tofile.append(matching[i])
+    json.dump(tofile,file)
     file.close()
 
 
@@ -99,10 +120,13 @@ def extract_download():
 
 text = Text(frame, bg="#fffffa", width=50, height=27.5)
 text.grid(row=0, column=3, columnspan=3, padx=30)
-import_button = Button(frame, text="Import", width=7, height=1, command=import_audit).place(x=10, y=510)  # y was 435
-openButton = Button(frame, text="Save", width=7, height=1, command=save_config).place(x=80, y=510)
-selectAllButton = Button(frame, text="Select All", width=7, height=1, command=select_all).place(x=150, y=510)
-deselectAllButton = Button(frame, text="Deselect All", width=10, height=1, command=deselect_all).place(x=220, y=510)
-downloadButton = Button(frame, text="Download audits", width=15, height=1, command=extract_download).place(x=310, y=510)
-
+import_button = Button(frame, text="Import", width=7, height=1, command=import_audit).place(relx=0.01, rely=0.98)  # y was 435
+openButton = Button(frame, text="Save", width=7, height=1, command=save_config).place(relx=0.06, rely=0.98)
+selectAllButton = Button(frame, text="Select All", width=7, height=1, command=select_all).place(relx=0.11, rely=0.98)
+deselectAllButton = Button(frame, text="Deselect All", width=10, height=1, command=deselect_all).place(relx=0.16, rely=0.98)
+downloadButton = Button(frame, text="Download audits", width=15, height=1, command=extract_download).place(relx=0.23, rely=0.98)
+global e
+e = Entry(frame, width=30,textvariable=querry).place(relx=0.33, rely=0.98)
+search_button=Button(frame, text="Search", width=15, height=1, command=search).place(relx=0.48, rely=0.98)
+main.bind('<Return>',entersearch)
 main.mainloop()
