@@ -5,72 +5,80 @@ configurations based on community best practices.
 ## Table of contents
 
 * [Technologies](#technologies)
-* [How to run](#how-to-run)
+* [How to use](#how-to-use)
 * [Code examples](#code-examples)
 * [Features](#features)
 * [Lab1 Feature](#lab1-feature)
+* [Lab2 Feature](#lab2-feature)
+* [Team](#team)
 * [Status](#status)
 
 ## Technologies
 Python3 and Tkinter  
 Working IDE: PyCharm
 
-## How to run
-1. First Select the audit you want to parse  
-python BST.py BTS_100_2_Windows_v1.0.audit.
-2. Select option from gui:  
-To download new version or not
+## How to use
+1. Run gui.py
+2. Click on download button to get the audits from file(for 1st time usage)
+3. Click import to select the needed audit file
+4. Select configurations which you need
+5. Save the desired selections(it will automatically save as .audit file)
 
 ## Code Examples
-Show examples of usage:
-`
+Lines from function for computing audit structure:
+```
+for n in range(len(lines)):
+if regexes['open'].match(lines[n]):
+    finds = regexes['open'].findall(lines[n])
+    # audit.append(("TAG", lines[n]))
+    stack.append(finds[0])
+    record = {}
+elif regexes['close'].match(lines[n]):
+    finds = regexes['close'].findall(lines[n])
+    if len(stack) == 0:
+        msg = 'Ran out of stack closing tag: {} (line {})'
+        display(msg.format(finds[0], n), exit=1)
+    elif finds[0] == stack[-1]:
+        stack = stack[:-1]
+```
+Lines from function for importing audit:
 
-    def parse_args(parameters):
-    global show_time, show_verbose
+```
+def import_audit():
+file_name = fd.askopenfilename(initialdir="../portal_audits")  # ../portal_audits/Windows
+global structure
+structure = view_audit_structure.main(file_name)
 
-    parser = argparse.ArgumentParser(description=('Display audit structure'))
+for struct in structure:
+    if 'description' in struct:
+        arr.append(struct['description'])
+    else:
+        arr.append('Error in selecting')
+valori.set(arr)
 
-    parser.add_argument('-t', '--timestamp', action='store_true',
-                        help='show timestamp on output')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='show verbose output')
+import_button = Button(frame, text="Import", width=7, height=1, command=import_audit).place(x=10, y=510)
+```
 
-    parser.add_argument('audit', type=str, nargs=1,
-                        help='audit file to view')
+## FEATURES
+## Lab1 Feature 
+• Import the manually downloaded policies from a predefined trusted location  
+• Parse and understand the format of data within the imported policy  
+• Save the same set of policies under a different name within a structured form (ex:database).    
+## Lab2 Feature
+• Choose which options they would like to run (by selecting or deselecting options)  
+• Search by name for an option (via a search bar)  
+• Select or deselect all options in one click  
+• Create and save a policy that contains only the selected options under the same name or a different one.  
 
-    args = parser.parse_args(parameters)
+## Team
 
-    if args.timestamp:
-        show_time = True
-    if args.verbose:
-        show_verbose = True
+> FAF - 182
 
-    args.audit = make_list(args.audit)[0]
+| <a href="https://github.com/DivineBee" target="_blank">**Vizant Beatrice**</a> | <a href="https://github.com/whysoserious97" target="_blank">**Lesco Andrei**</a>
+| :---: |:---:|
+| [![Vizant Beatrice](https://avatars0.githubusercontent.com/u/49019844?s=200&u=b232b6a4e7d387d304f0b7938eabe6cf742bacb8&v=4)](http://github.com/DivineBee)    | [![Lesco Andrei](https://avatars2.githubusercontent.com/u/53511833?s=200&u=4b5de9bd5272530cf96b9d5a174dc6af3e3ecbf0&v=4)](//github.com/whysoserious97) |
+| <a href="//github.com/DivineBee" target="_blank">`github.com/DivineBee`</a> | <a href="http://github.com/whysoserious97" target="_blank">`github.com/whysoserious97`</a> |
 
-    return args
-`
-
-## Features
-List of features ready and TODOs for future development
-* Python 3 and Tkinter
-
-To-do list:
-* Lab2
-* Lab3
-* ...
-
-## Lab1 Feature
-Objective of this lab is to find a set of policies suitable for the environment  
-it will be working in (i.e. Win, Linux, MacOS etc.) and download them. Then to  
-provide persisting the imported policies i.e. parsing and saving them locally   
-into a structured form (ex: database). It should be possible to upload the same  
-policies multiple times and save them locally under different custom names.  
-
-Application should be able to:  
-• Import the manually downloaded policies from a predefined trusted location;  
-• Parse and understand the format of data within the imported policy;  
-• Save the same set of policies under a different name within a structured form (ex:
-database).  
 
 ## Status
 Project is: _in progress_
