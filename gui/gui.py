@@ -1,15 +1,14 @@
 import glob
 import json
-import pickle
+import os
 import tarfile
 from tkinter import *
-from tkinter import ttk
 from tkinter import filedialog as fd
+from tkinter import ttk
 import requests
 import view_audit_structure
 
 global previous
-
 main = Tk()
 main.title("Controls Choice List")
 main.geometry("1620x575")
@@ -17,22 +16,62 @@ frame = ttk.Frame(main, padding=(4, 4, 16, 16))
 frame.grid(column=0, row=0)
 previous = []
 index = 0
-arr = []
-matching=[]
-querry=StringVar()
+arr = []  # items selected
+matching = []
+
+SystemDict = {}
+
+querry = StringVar()
 
 valori = StringVar()
 tofile = []  # the array of configurations to be send to file
-structure=[]
+structure = []
+
+
+def check():
+    print('Here')
+    path = os.getcwd()
+    print(path)
+    os.system('secedit.exe /export /cfg ' + path + '\\security.txt')
+    file = open('security.txt', 'r')
+    input = file.read()
+    san = ""
+    for i in input:
+        if i.isprintable() or i.isspace():
+            san += i
+    san = san.split('\n')
+    san = [x for x in san if len(x) > 0]
+
+    # print(san)
+    for str in san:
+        if '=' in str:
+            to_add = str[str.index('=') + 1:]
+            key_to_add = str[:str.index('=')]
+            resultvalue = ''
+            resultkey = ''
+            for char in to_add:
+                if char != ' ':
+                    resultvalue += char
+            for char in key_to_add:
+                if char != ' ':
+                    resultkey += char
+            SystemDict[resultkey] = resultvalue
+    print(SystemDict)
+    file.close()
+
+
 def entersearch(evt):
     search()
+
+
 def search():
     global structure
     q = querry.get()
-    arr=[struct['description'] for struct in structure if q.lower() in struct['description'].lower()]
+    arr = [struct['description'] for struct in structure if q.lower() in struct['description'].lower()]
     global matching
-    matching=[struct for struct in structure if q in struct['description']]
+    matching = [struct for struct in structure if q in struct['description']]
     valori.set(arr)
+
 
 def on_select_configuration(evt):
     global previous
@@ -60,10 +99,10 @@ def import_audit():
     global structure
     structure = view_audit_structure.main(file_name)
     global matching
-    matching=structure
-    if len(structure)==0:
-        f=open(file_name,'r')
-        structure=json.loads(f.read())
+    matching = structure
+    if len(structure) == 0:
+        f = open(file_name, 'r')
+        structure = json.loads(f.read())
         f.close()
     for struct in structure:
         if 'description' in struct:
@@ -87,7 +126,7 @@ def save_config():
     selection = lstbox.curselection()
     for i in selection:
         tofile.append(matching[i])
-    json.dump(tofile,file)
+    json.dump(tofile, file)
     file.close()
 
 
@@ -110,9 +149,9 @@ def download_url(url, save_path, chunk_size=1024):
 
 
 def extract_download():
-    url="https://www.tenable.com/downloads/api/v1/public/pages/download-all-compliance-audit-files/downloads/7472/download?i_agree_to_tenable_license_agreement=true"
-    path="audits.tar.gz"
-    download_url(url,path)
+    url = "https://www.tenable.com/downloads/api/v1/public/pages/download-all-compliance-audit-files/downloads/7472/download?i_agree_to_tenable_license_agreement=true"
+    path = "audits.tar.gz"
+    download_url(url, path)
     tf = tarfile.open("audits.tar.gz")
     tf.extractall()
     print(glob.glob("portal_audits/*"))
@@ -120,13 +159,17 @@ def extract_download():
 
 text = Text(frame, bg="#fffffa", width=50, height=27.5)
 text.grid(row=0, column=3, columnspan=3, padx=30)
-import_button = Button(frame, text="Import", width=7, height=1, command=import_audit).place(relx=0.01, rely=0.98)  # y was 435
+import_button = Button(frame, text="Import", width=7, height=1, command=import_audit).place(relx=0.01,
+                                                                                            rely=0.98)  # y was 435
 openButton = Button(frame, text="Save", width=7, height=1, command=save_config).place(relx=0.06, rely=0.98)
 selectAllButton = Button(frame, text="Select All", width=7, height=1, command=select_all).place(relx=0.11, rely=0.98)
-deselectAllButton = Button(frame, text="Deselect All", width=10, height=1, command=deselect_all).place(relx=0.16, rely=0.98)
-downloadButton = Button(frame, text="Download audits", width=15, height=1, command=extract_download).place(relx=0.23, rely=0.98)
+deselectAllButton = Button(frame, text="Deselect All", width=10, height=1, command=deselect_all).place(relx=0.16,
+                                                                                                       rely=0.98)
+downloadButton = Button(frame, text="Download audits", width=15, height=1, command=extract_download).place(relx=0.23,
+                                                                                                           rely=0.98)
 global e
-e = Entry(frame, width=30,textvariable=querry).place(relx=0.33, rely=0.98)
-search_button=Button(frame, text="Search", width=15, height=1, command=search).place(relx=0.48, rely=0.98)
-main.bind('<Return>',entersearch)
+e = Entry(frame, width=30, textvariable=querry).place(relx=0.33, rely=0.98)
+search_button = Button(frame, text="Search", width=15, height=1, command=search).place(relx=0.48, rely=0.98)
+check_button = Button(frame, text="Check", width=15, height=1, command=check).place(relx=0.55, rely=0.98)
+main.bind('<Return>', entersearch)
 main.mainloop()
