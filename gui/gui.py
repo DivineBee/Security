@@ -18,7 +18,6 @@ previous = []
 index = 0
 arr = []  # items selected
 matching = []
-
 SystemDict = {}
 
 querry = StringVar()
