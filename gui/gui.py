@@ -9,6 +9,7 @@ from tkinter import ttk
 import requests
 #import win32com.shell.shell as shell
 import view_audit_structure
+import re
 
 global previous
 main = Tk()
@@ -73,9 +74,38 @@ def check():
                 if char != ' ':
                     resultkey+=char
             SystemDict[resultkey]=resultvalue
-    #print(SystemDict)
-    #print(structure)
+    print(SystemDict)
+    print(structure)
 
+    for struct in structure:
+        if 'reg_key' in struct and 'reg_item' in struct and 'value_data' in struct:
+            query='reg query '+struct['reg_key']+' /v '+struct['reg_item']
+            out = subprocess.Popen(query,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
+            output = out.communicate() [0].decode('ascii')
+            str=''
+            for char in output:
+                if char.isprintable():
+                    str+=char
+            output=str
+            output=output.split(' ')
+            output=[x for x in output if len(x)>0]
+            if len(output)>4:
+                for i in range(5,len(output)):
+                    output[4]+=' '+output[i]
+                output=output[:5]
+            if not 'ERROR' in output[0]:
+                print(output,'iar valoarea din audit:',struct['value_data'],'iar query:',query)
+                prog=re.compile(struct['value_data'])
+                if len(output)==5:
+                    if prog.match(output[4]):
+                        print('Este ca in audit')
+                    else:
+                        print('Trebuie de schimbat din',output[4],'in',struct['value_data'])
+                else:
+                    print('Alt caz:',output)
+   #['reg', 'query',struct['reg_key'],'/v',struct['reg_item']]
     #compare(SystemDict,structure)
 
 
