@@ -1,12 +1,13 @@
 import glob
 import json
 import os
+import subprocess
 import tarfile
 from tkinter import *
 from tkinter import filedialog as fd
 from tkinter import ttk
 import requests
-import win32com.shell.shell as shell
+#import win32com.shell.shell as shell
 import view_audit_structure
 
 global previous
@@ -38,7 +39,17 @@ def check():
     print('Here')
     path=os.getcwd()
     print(path)
-    os.system('secedit.exe /export /cfg '+path+'\\security.txt')
+    out = subprocess.Popen(['secedit.exe', '/export', '/cfg',path+'\\security.txt'],
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT)
+    output=out.communicate()[0]
+
+
+
+
+
+    print('Output:',output.decode('ascii'))
+        #os.system('secedit.exe /export /cfg '+path+'\\security.txt')
     file=open('security.txt','r')
     input=file.read()
     san=""
@@ -62,7 +73,7 @@ def check():
                 if char != ' ':
                     resultkey+=char
             SystemDict[resultkey]=resultvalue
-    print(SystemDict)
+    #print(SystemDict)
     #print(structure)
 
     #compare(SystemDict,structure)
