@@ -86,25 +86,30 @@ def check():
             output = out.communicate() [0].decode('ascii')
             str=''
             for char in output:
-                if char.isprintable():
+                if char.isprintable() and char!='\n' and char != '\r' :
                     str+=char
             output=str
             output=output.split(' ')
             output=[x for x in output if len(x)>0]
-            if len(output)>4:
-                for i in range(5,len(output)):
-                    output[4]+=' '+output[i]
-                output=output[:5]
-            if not 'ERROR' in output[0]:
-                print(output,'iar valoarea din audit:',struct['value_data'],'iar query:',query)
-                prog=re.compile(struct['value_data'])
-                if len(output)==5:
-                    if prog.match(output[4]):
-                        print('Este ca in audit')
+            value=''
+
+            for i in range(len(output)):
+                if 'REG_' in output[i]:
+                    for element in output[i+1:]:
+                        value=value +element+' '
+                    value=value[:len(value)-1]  #last space we delete
+                    #print('Value',value)
+                    p=re.compile('.*'+struct['value_data']+'.*')
+                    if p.match(value):
+                        print('Patern:',struct['value_data'])
+                        print('Value:',value)
                     else:
-                        print('Trebuie de schimbat din',output[4],'in',struct['value_data'])
-                else:
-                    print('Alt caz:',output)
+                        print('Nu a mers',struct['value_data'])
+                        print('Value care nu a mers',value)
+
+
+
+
    #['reg', 'query',struct['reg_key'],'/v',struct['reg_item']]
     #compare(SystemDict,structure)
 
@@ -152,6 +157,22 @@ def import_audit():
         arr = []
     global structure
     structure = view_audit_structure.main(file_name)
+    for element in structure:
+        for key in element:
+            str=''
+            for char in element[key]:
+                if char!= '"' and char != "'":
+                    str+=char
+            isspacefirst=True
+            str2=''
+            for char in str:
+                if char==' ' and isspacefirst:
+                    continue
+                else:
+                    str2+=char
+                    isspacefirst=False
+            element[key]=str2
+
     global matching
     matching=structure
     if len(structure)==0:
