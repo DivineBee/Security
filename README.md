@@ -76,7 +76,7 @@ import_button = Button(frame, text="Import", width=7, height=1, command=import_a
 
 | <a href="https://github.com/DivineBee" target="_blank">**Vizant Beatrice**</a> | <a href="https://github.com/whysoserious97" target="_blank">**Lesco Andrei**</a>
 | :---: |:---:|
-| [![Vizant Beatrice](https://avatars0.githubusercontent.com/u/49019844?s=200&u=b232b6a4e7d387d304f0b7938eabe6cf742bacb8&v=4)](http://github.com/DivineBee)    | [![Lesco Andrei](https://avatars2.githubusercontent.com/u/53511833?s=200&u=4b5de9bd5272530cf96b9d5a174dc6af3e3ecbf0&v=4)](//github.com/whysoserious97) |
+| [![Vizant Beatrice](https://avatars0.githubusercontent.com/u/49019844?s=200&u=b232b6a4e7d387d304f0b7938eabe6cf742bacb8&v=4)](http://github.com/DivineBee)    | [![Lesco Andrei](https://avatars2.githubusercontent.com/u/53511833?s=200&u=4b5de9bd5272530cf96b9d5a174dc6af3e3ecbf0&v=4)](http://github.com/whysoserious97) |
 | <a href="//github.com/DivineBee" target="_blank">`github.com/DivineBee`</a> | <a href="http://github.com/whysoserious97" target="_blank">`github.com/whysoserious97`</a> |
 
 
