@@ -7,7 +7,6 @@ from tkinter import *
 from tkinter import filedialog as fd
 from tkinter import ttk
 import requests
-#import win32com.shell.shell as shell
 import view_audit_structure
 import re
 
@@ -19,118 +18,115 @@ frame = ttk.Frame(main, padding=(4, 4, 16, 16))
 frame.grid(column=0, row=0)
 previous = []
 index = 0
-arr = []    # items selected
-matching=[]
-
-SystemDict={}
-
-
-
-querry=StringVar()
-
+arr = []  # items selected
+matching = []
+SystemDict = {}
+querry = StringVar()
 valori = StringVar()
 tofile = []  # the array of configurations to be send to file
-structure=[]
+structure = []
 
-# def compare(sysdict,structure):
-#     for struct in structure:
 
 
 def check():
+    success = []
+    fail = []
+    unknown = []
     print('Here')
-    path=os.getcwd()
+    path = os.getcwd()
     print(path)
-    out = subprocess.Popen(['secedit.exe', '/export', '/cfg',path+'\\security.txt'],
+    out = subprocess.Popen(['secedit.exe', '/export', '/cfg', path + '\\security.txt'],
                            stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT)
-    output=out.communicate()[0]
+    output = out.communicate()[0]
 
-
-
-
-
-    print('Output:',output.decode('ascii'))
-        #os.system('secedit.exe /export /cfg '+path+'\\security.txt')
-    file=open('security.txt','r')
-    input=file.read()
-    san=""
+    print('Output:', output.decode('ascii'))
+    # os.system('secedit.exe /export /cfg '+path+'\\security.txt')
+    file = open('security.txt', 'r')
+    input = file.read()
+    san = ""
     for i in input:
         if i.isprintable() or i.isspace():
-            san+=i
-    san=san.split('\n')
-    san=[x for x in san if len(x)>0]
+            san += i
+    san = san.split('\n')
+    san = [x for x in san if len(x) > 0]
 
-    #print(san)
+    # print(san)
     for str in san:
         if '=' in str:
-            to_add=str[str.index('=')+1:]
-            key_to_add=str[:str.index('=')]
-            resultvalue=''
-            resultkey=''
+            to_add = str[str.index('=') + 1:]
+            key_to_add = str[:str.index('=')]
+            resultvalue = ''
+            resultkey = ''
             for char in to_add:
-                if char!=' ':
-                    resultvalue+=char
+                if char != ' ':
+                    resultvalue += char
             for char in key_to_add:
                 if char != ' ':
-                    resultkey+=char
-            SystemDict[resultkey]=resultvalue
+                    resultkey += char
+            SystemDict[resultkey] = resultvalue
     print(SystemDict)
     print(structure)
 
     for struct in structure:
         if 'reg_key' in struct and 'reg_item' in struct and 'value_data' in struct:
-            query='reg query '+struct['reg_key']+' /v '+struct['reg_item']
+            query = 'reg query ' + struct['reg_key'] + ' /v ' + struct['reg_item']
             out = subprocess.Popen(query,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT)
-            output = out.communicate() [0].decode('ascii')
-            str=''
+            output = out.communicate()[0].decode('ascii')
+            str = ''
             for char in output:
-                if char.isprintable() and char!='\n' and char != '\r' :
-                    str+=char
-            output=str
-            output=output.split(' ')
-            output=[x for x in output if len(x)>0]
-            value=''
-
+                if char.isprintable() and char != '\n' and char != '\r':
+                    str += char
+            output = str
+            output = output.split(' ')
+            output = [x for x in output if len(x) > 0]
+            value = ''
+            if 'ERROR' in output[0]:
+                unknown.append(struct['reg_key'] + struct['reg_item'])
             for i in range(len(output)):
                 if 'REG_' in output[i]:
-                    for element in output[i+1:]:
-                        value=value +element+' '
-                    value=value[:len(value)-1]  #last space we delete
-                    #print('Value',value)
-                    p=re.compile('.*'+struct['value_data']+'.*')
+                    for element in output[i + 1:]:
+                        value = value + element + ' '
+                    value = value[:len(value) - 1]  # last space we delete
+                    # print('Value',value)
+                    p = re.compile('.*' + struct['value_data'] + '.*')
                     if p.match(value):
-                        print('Patern:',struct['value_data'])
-                        print('Value:',value)
+                        print('Patern:', struct['value_data'])
+                        print('Value:', value)
+                        success.append(struct['reg_key'] + struct['reg_item']+'\n'+'Value:' + value)
                     else:
-                        print('Nu a mers',struct['value_data'])
-                        print('Value care nu a mers',value)
-
-
-
-
-   #['reg', 'query',struct['reg_key'],'/v',struct['reg_item']]
-    #compare(SystemDict,structure)
-
-
+                        print('Nu a mers', struct['value_data'])
+                        print('Value care nu a mers', value)
+                        fail.append(struct ['reg_key'] + struct ['reg_item'] + '\n' + 'Actual:' + value + '\n' +'Expected:'+struct['value_data'])
     file.close()
+    frame2 = Frame(main, bd=10, bg='yellow')
+    frame2.place(relx=0.5, rely=0.2, relwidth=0.7,
+                 relheight=0.8, anchor='n')
+    text2 = Text(frame2, bg="#00ff00", width=50, height=27.5)
+    text2.place(relwidth=0.25, relheight=0.9)
+    text2.insert(END, '\n\n'.join(success))
+    text3 = Text(frame2, bg="#ff5555", width=50, height=27.5)
+    text3.place(relwidth=0.25, relheight=0.9,relx=0.3)
+    text3.insert(END, '\n\n'.join(fail))
+    text4 = Text(frame2, bg="#888888", width=50, height=27.5)
+    text4.place(relwidth=0.25, relheight=0.9, relx=0.6)
+    text4.insert(END, '\n\n'.join(unknown))
 
 
-
-
-
-    #params = 'secedit.exe /export /cfg D:\\security.inf'
-    #shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable, lpParameters=params)
 def entersearch(evt):
     search()
+
+
 def search():
     global structure
     q = querry.get()
-    arr=[struct['description'] for struct in structure if q.lower() in struct['description'].lower()]
+    arr = [struct['description'] for struct in structure if q.lower() in struct['description'].lower()]
     global matching
-    matching=[struct for struct in structure if q in struct['description']]
+    matching = [struct for struct in structure if q in struct['description']]
     valori.set(arr)
+
 
 def on_select_configuration(evt):
     global previous
@@ -159,25 +155,25 @@ def import_audit():
     structure = view_audit_structure.main(file_name)
     for element in structure:
         for key in element:
-            str=''
+            str = ''
             for char in element[key]:
-                if char!= '"' and char != "'":
-                    str+=char
-            isspacefirst=True
-            str2=''
+                if char != '"' and char != "'":
+                    str += char
+            isspacefirst = True
+            str2 = ''
             for char in str:
-                if char==' ' and isspacefirst:
+                if char == ' ' and isspacefirst:
                     continue
                 else:
-                    str2+=char
-                    isspacefirst=False
-            element[key]=str2
+                    str2 += char
+                    isspacefirst = False
+            element[key] = str2
 
     global matching
-    matching=structure
-    if len(structure)==0:
-        f=open(file_name,'r')
-        structure=json.loads(f.read())
+    matching = structure
+    if len(structure) == 0:
+        f = open(file_name, 'r')
+        structure = json.loads(f.read())
         f.close()
     for struct in structure:
         if 'description' in struct:
@@ -187,7 +183,7 @@ def import_audit():
     valori.set(arr)
 
 
-lstbox = Listbox(frame, bg="#e6fffa", listvariable=valori, selectmode=MULTIPLE, width=130, height=25)
+lstbox = Listbox(frame, bg="#85caff", listvariable=valori, selectmode=MULTIPLE, width=130, height=25)
 lstbox.grid(row=0, column=0, columnspan=3, padx=10, pady=10)
 lstbox.bind('<<ListboxSelect>>', on_select_configuration)
 
@@ -200,10 +196,10 @@ def save_config():
     file = open(file_name, 'w')
     selection = lstbox.curselection()
     for i in selection:
-        #file.write(str(tofile))
+        # file.write(str(tofile))
         tofile.append(matching[i])
-    json.dump(tofile,file)
-    #file.write(str(tofile))
+    json.dump(tofile, file)
+    # file.write(str(tofile))
     file.close()
 
 
@@ -226,24 +222,27 @@ def download_url(url, save_path, chunk_size=1024):
 
 
 def extract_download():
-    url="https://www.tenable.com/downloads/api/v1/public/pages/download-all-compliance-audit-files/downloads/7472/download?i_agree_to_tenable_license_agreement=true"
-    path="audits.tar.gz"
-    download_url(url,path)
+    url = "https://www.tenable.com/downloads/api/v1/public/pages/download-all-compliance-audit-files/downloads/7472/download?i_agree_to_tenable_license_agreement=true"
+    path = "audits.tar.gz"
+    download_url(url, path)
     tf = tarfile.open("audits.tar.gz")
     tf.extractall()
     print(glob.glob("portal_audits/*"))
 
 
-text = Text(frame, bg="#fffffa", width=50, height=27.5)
+text = Text(frame, bg="#ffb44a", width=50, height=27.5)
 text.grid(row=0, column=3, columnspan=3, padx=30)
-import_button = Button(frame, text="Import", width=7, height=1, command=import_audit).place(relx=0.01, rely=0.96)  # y was 435
-openButton = Button(frame, text="Save", width=7, height=1, command=save_config).place(relx=0.06, rely=0.96)
-selectAllButton = Button(frame, text="Select All", width=7, height=1, command=select_all).place(relx=0.11, rely=0.96)
-deselectAllButton = Button(frame, text="Deselect All", width=10, height=1, command=deselect_all).place(relx=0.16, rely=0.96)
-downloadButton = Button(frame, text="Download audits", width=15, height=1, command=extract_download).place(relx=0.23, rely=0.96)
+import_button = Button(frame, bg="#1b95f2", fg="white", text="Import", width=7, height=1, command=import_audit).place(relx=0.01,
+                                                                                            rely=0.98)  # y was 435
+openButton = Button(frame, bg="#1b95f2", fg="white", text="Save", width=7, height=1, command=save_config).place(relx=0.05, rely=0.98)
+selectAllButton = Button(frame, bg="#1b95f2", fg="white", text="Select All", width=7, height=1, command=select_all).place(relx=0.11, rely=0.98)
+deselectAllButton = Button(frame, bg="#1b95f2", fg="white", text="Deselect All", width=10, height=1, command=deselect_all).place(relx=0.15,
+                                                                                                       rely=0.98)
+downloadButton = Button(frame, bg="#1b95f2", fg="white", text="Download audits", width=15, height=1, command=extract_download).place(relx=0.23,
+                                                                                                           rely=0.98)
 global e
-e = Entry(frame, width=30,textvariable=querry).place(relx=0.33, rely=0.97)
-search_button=Button(frame, text="Search", width=15, height=1, command=search).place(relx=0.48, rely=0.96)
-check_button=Button(frame, text="Check", width=15, height=1, command=check).place(relx=0.55, rely=0.96)
-main.bind('<Return>',entersearch)
+e = Entry(frame,bg="#ffd685", width=30, textvariable=querry).place(relx=0.33, rely=0.99)
+search_button = Button(frame, bg="#faa700", fg="white", text="Search", width=15, height=1, command=search).place(relx=0.48, rely=0.98)
+check_button = Button(frame, bg="#1b95f2", fg="white", text="Check", width=15, height=1, command=check).place(relx=0.56, rely=0.98)
+main.bind('<Return>', entersearch)
 main.mainloop()
