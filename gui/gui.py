@@ -113,16 +113,12 @@ def check():
     frame2.place(relx=0.5, rely=0.1, width=800, relwidth=0.4, relheight=0.8, anchor='n')
 
     text2 = Text(frame2, bg="#afca54", width=50, height=27.5, highlightthickness=3)
-    text2.place(relx=0.02, rely=0.03, relwidth=0.3, relheight=0.9)
+    text2.place(relx=0.07, rely=0.03, relwidth=0.4, relheight=0.9)
     text2.insert(END, '\n\n'.join(success))
-
-    text4 = Text(frame2, bg="#ebd9c8", width=50, height=27.5, highlightthickness=3)
-    text4.place(relx=0.68, rely=0.03, relwidth=0.3, relheight=0.9)
-    text4.insert(END, '\n\n'.join(unknown))
 
     listbox_fail = Listbox(frame2, bg="#e45149", font=myFont, fg="white", listvariable=valori, selectmode=MULTIPLE,
                            width=50, height=27, highlightthickness=3)
-    listbox_fail.place(relx=0.35, rely=0.03, relwidth=0.3, relheight=0.9)
+    listbox_fail.place(relx=0.5, rely=0.03, relwidth=0.4, relheight=0.9)
     listbox_fail.config(highlightbackground="white")
     listbox_fail.bind('<<ListboxSelect>>', on_select_failed)
 
@@ -131,7 +127,7 @@ def check():
 
     exit_btn = Button(frame2, text='Close', command=exit, bg="#03161d", fg="white", font=myFont, padx='10px',
                       pady='3px')
-    exit_btn.place(relx=0.47, rely=0.95)
+    exit_btn.place(relx=0.46, rely=0.95)
 
 #change contents
 def on_select_failed(evt):
