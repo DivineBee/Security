@@ -2,7 +2,7 @@
 > It's a desktop application which works with cyber security audit policies - which allows configuration of a system’s vulnerability to different attacks and enforce certain security
 configurations based on community best practices.
 
-![alt text](https://raw.githubusercontent.com/DivineBee/Security/master/Apllication.jpg)
+![alt text](https://raw.githubusercontent.com/DivineBee/Security/master/Application.jpg)
 
 ## Table of contents
 
