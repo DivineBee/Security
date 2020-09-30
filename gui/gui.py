@@ -101,26 +101,30 @@ def check():
                         print('Value:', value)
                         success.append(struct['reg_key'] + struct['reg_item'] + '\n' + 'Value:' + value)
                     else:
-                        print('Nu a mers', struct['value_data'])
-                        print('Value care nu a mers', value)
+                        print('Did not pass: ', struct['value_data'])
+                        print('Value which did not pass: ', value)
                         fail.append(
                             struct['reg_key'] + struct['reg_item'] + '\n' + 'Actual:' + value + '\n' + 'Expected:' +
                             struct['value_data'])
+
     file.close()
     frame2 = Frame(main, bd=10, bg='#03161d', highlightthickness=3)
     frame2.config(highlightbackground="white")
     frame2.place(relx=0.5, rely=0.1, width=800, relwidth=0.4, relheight=0.8, anchor='n')
-    text2 = Text(frame2, bg="#afca54", width=50, height=27.5)
+
+    text2 = Text(frame2, bg="#afca54", width=50, height=27.5, highlightthickness=3)
     text2.place(relx=0.02, rely=0.03, relwidth=0.3, relheight=0.9)
     text2.insert(END, '\n\n'.join(success))
-    text3 = Text(frame2, bg="#e45149", width=50, height=27.5)
-    text3.place(relx=0.35, rely=0.03, relwidth=0.3, relheight=0.9)
-    text3.insert(END, '\n\n'.join(fail))
-    text4 = Text(frame2, bg="#ebd9c8", width=50, height=27.5)
+
+    text4 = Text(frame2, bg="#ebd9c8", width=50, height=27.5, highlightthickness=3)
     text4.place(relx=0.68, rely=0.03, relwidth=0.3, relheight=0.9)
     text4.insert(END, '\n\n'.join(unknown))
 
-    # closeButton = Button(frame2, bg="#bc4f07", fg="white", font=myFont,text="Search", width=7, height=1, command=close_check_window).place(relx=0.49, rely=0.999)
+    listbox_fail = Listbox(frame2, bg="#e45149", font=myFont, fg="white", listvariable=valori, selectmode=MULTIPLE,
+                           width=50, height=27, highlightthickness=3)
+    listbox_fail.place(relx=0.35, rely=0.03, relwidth=0.3, relheight=0.9)
+    listbox_fail.config(highlightbackground="white")
+    listbox_fail.bind('<<ListboxSelect>>', on_select_failed)
 
     def exit():
         frame2.destroy()
@@ -128,6 +132,24 @@ def check():
     exit_btn = Button(frame2, text='Close', command=exit, bg="#03161d", fg="white", font=myFont, padx='10px',
                       pady='3px')
     exit_btn.place(relx=0.47, rely=0.95)
+
+#change contents
+def on_select_failed(evt):
+    global previous
+    global index
+    w = evt.widget
+    actual = w.curselection()
+
+    difference = [item for item in actual if item not in previous]
+    if len(difference) > 0:
+        index = [item for item in actual if item not in previous][0]
+    previous = w.curselection()
+
+    text.delete(1.0, END)
+    str = '\n'
+    for key in matching[index]:
+        str += key + ':' + matching[index][key] + '\n'
+    text.insert(END, str)
 
 
 def entersearch(evt):
