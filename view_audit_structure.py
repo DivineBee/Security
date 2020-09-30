@@ -6,9 +6,7 @@
 
 import argparse
 import datetime
-import re
-import sys
-import json
+
 from tkinter import *
 
 regexes = {

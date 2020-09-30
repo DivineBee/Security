@@ -7,17 +7,19 @@ import tarfile
 from tkinter import *
 from tkinter import filedialog as fd
 from tkinter import ttk
+from tkinter.font import Font
 import requests
 import view_audit_structure
 import re
 
 global previous
 main = Tk()
+myFont = Font(family="Century Gothic", size=12)
 s = ttk.Style()
-s.configure('TFrame', background='#002936')
-main.title("Controls Choice List")
-main.geometry("1620x700")
-frame = ttk.Frame(main, width=1620, height=800, style='TFrame', padding=(4, 4, 200, 200))
+s.configure('TFrame', background='#03161d')
+main.title("SBT - Security Benchmarking Tool")
+main.geometry("1720x700")
+frame = ttk.Frame(main, width=1720, height=800, style='TFrame', padding=(4, 4, 200, 200))
 frame.grid(column=0, row=0)
 previous = []
 index = 0
@@ -31,6 +33,9 @@ structure = []
 
 
 def check():
+    success = []
+    fail = []
+    unknown = []
     print('Here')
     path = os.getcwd()
     print(path)
@@ -82,7 +87,8 @@ def check():
             output = output.split(' ')
             output = [x for x in output if len(x) > 0]
             value = ''
-
+            if 'ERROR' in output[0]:
+                unknown.append(struct['reg_key'] + struct['reg_item'])
             for i in range(len(output)):
                 if 'REG_' in output[i]:
                     for element in output[i + 1:]:
@@ -93,10 +99,35 @@ def check():
                     if p.match(value):
                         print('Patern:', struct['value_data'])
                         print('Value:', value)
+                        success.append(struct['reg_key'] + struct['reg_item'] + '\n' + 'Value:' + value)
                     else:
                         print('Nu a mers', struct['value_data'])
                         print('Value care nu a mers', value)
+                        fail.append(
+                            struct['reg_key'] + struct['reg_item'] + '\n' + 'Actual:' + value + '\n' + 'Expected:' +
+                            struct['value_data'])
     file.close()
+    frame2 = Frame(main, bd=10, bg='#03161d', highlightthickness=3)
+    frame2.config(highlightbackground="white")
+    frame2.place(relx=0.5, rely=0.1, width=800, relwidth=0.4, relheight=0.8, anchor='n')
+    text2 = Text(frame2, bg="#afca54", width=50, height=27.5)
+    text2.place(relx=0.02, rely=0.03, relwidth=0.3, relheight=0.9)
+    text2.insert(END, '\n\n'.join(success))
+    text3 = Text(frame2, bg="#e45149", width=50, height=27.5)
+    text3.place(relx=0.35, rely=0.03, relwidth=0.3, relheight=0.9)
+    text3.insert(END, '\n\n'.join(fail))
+    text4 = Text(frame2, bg="#ebd9c8", width=50, height=27.5)
+    text4.place(relx=0.68, rely=0.03, relwidth=0.3, relheight=0.9)
+    text4.insert(END, '\n\n'.join(unknown))
+
+    # closeButton = Button(frame2, bg="#bc4f07", fg="white", font=myFont,text="Search", width=7, height=1, command=close_check_window).place(relx=0.49, rely=0.999)
+
+    def exit():
+        frame2.destroy()
+
+    exit_btn = Button(frame2, text='Close', command=exit, bg="#03161d", fg="white", font=myFont, padx='10px',
+                      pady='3px')
+    exit_btn.place(relx=0.47, rely=0.95)
 
 
 def entersearch(evt):
@@ -167,7 +198,9 @@ def import_audit():
     valori.set(arr)
 
 
-lstbox = Listbox(frame, bg="#005C71",fg="white", listvariable=valori, selectmode=MULTIPLE, width=130, height=25)
+lstbox = Listbox(frame, bg="#4996b3", font=myFont, fg="white", listvariable=valori, selectmode=MULTIPLE, width=130,
+                 height=25, highlightthickness=3)
+lstbox.config(highlightbackground="white")
 lstbox.grid(row=0, column=0, columnspan=3, padx=10, pady=10)
 lstbox.bind('<<ListboxSelect>>', on_select_configuration)
 
@@ -214,16 +247,24 @@ def extract_download():
     print(glob.glob("portal_audits/*"))
 
 
-text = Text(frame, bg="#fdac07", width=50, height=27.5)
+text = Text(frame, bg="#bc4f07", fg="white", font=myFont, width=50, height=26, highlightthickness=3)
+text.config(highlightbackground="white")
 text.grid(row=0, column=3, columnspan=3, padx=30)
-import_button = Button(frame, bg="#1b95f2", fg="white", text="Import", width=7, height=1, command=import_audit).place(relx=0.01, rely=0.99)  # y was 435
-openButton = Button(frame, bg="#1b95f2", fg="white", text="Save", width=7, height=1, command=save_config).place(relx=0.06, rely=0.99)
-selectAllButton = Button(frame, bg="#1b95f2", fg="white", text="Select All", width=7, height=1, command=select_all).place(relx=0.11, rely=0.99)
-deselectAllButton = Button(frame, bg="#1b95f2", fg="white", text="Deselect All", width=10, height=1, command=deselect_all).place(relx=0.16, rely=0.99)
-downloadButton = Button(frame, bg="#1b95f2", fg="white", text="Download audits", width=15, height=1, command=extract_download).place(relx=0.225, rely=0.99)
+import_button = Button(frame, bg="#bc4f07", fg="white", font=myFont, text="Import", width=7, height=1,
+                       command=import_audit).place(relx=0.01, rely=0.999)  # y was 435
+openButton = Button(frame, bg="#bc4f07", fg="white", font=myFont, text="Save", width=7, height=1,
+                    command=save_config).place(relx=0.06, rely=0.999)
+selectAllButton = Button(frame, bg="#bc4f07", fg="white", font=myFont, text="Select All", width=7, height=1,
+                         command=select_all).place(relx=0.11, rely=0.999)
+deselectAllButton = Button(frame, bg="#bc4f07", fg="white", font=myFont, text="Deselect All", width=10, height=1,
+                           command=deselect_all).place(relx=0.16, rely=0.999)
+downloadButton = Button(frame, bg="#bc4f07", fg="white", font=myFont, text="Download audits", width=15, height=1,
+                        command=extract_download).place(relx=0.227, rely=0.999)
 global e
-e = Entry(frame,bg="#ffd685", width=30, textvariable=querry).place(relx=0.32, rely=0.99)
-search_button = Button(frame, bg="#faa700", fg="white", text="Search", width=15, height=1, command=search).place(relx=0.473, rely=0.99)
-check_button = Button(frame, bg="#1b95f2", fg="white", text="Check", width=15, height=1, command=check).place(relx=0.569, rely=0.99)
+e = Entry(frame, bg="#ffe4d1", font=myFont, width=30, textvariable=querry).place(relx=0.325, rely=0.999)
+search_button = Button(frame, bg="#4996b3", fg="white", font=myFont, text="Search", width=7, height=1,
+                       command=search).place(relx=0.49, rely=0.999)
+check_button = Button(frame, bg="#bc4f07", fg="white", font=myFont, text="Check", width=7, height=1,
+                      command=check).place(relx=0.54, rely=0.999)
 main.bind('<Return>', entersearch)
 main.mainloop()
