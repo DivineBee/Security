@@ -5,12 +5,13 @@ import os
 import subprocess
 import tarfile
 from tkinter import *
-from tkinter import filedialog as fd
+from tkinter import filedialog as fd, messagebox
 from tkinter import ttk
 from tkinter.font import Font
 import requests
 import view_audit_structure
 import re
+from tkinter import filedialog
 
 global previous
 main = Tk()
@@ -31,11 +32,16 @@ valori = StringVar()
 tofile = []  # the array of configurations to be send to file
 structure = []
 
+success = []
+fail = []
+unknown = []
+
+toChange=[]
+valori2=StringVar()
+arr2=[]
 
 def check():
-    success = []
-    fail = []
-    unknown = []
+
     print('Here')
     path = os.getcwd()
     print(path)
@@ -103,9 +109,15 @@ def check():
                     else:
                         print('Did not pass: ', struct['value_data'])
                         print('Value which did not pass: ', value)
+                        fail.append( [struct,value])
+                        '''
                         fail.append(
                             struct['reg_key'] + struct['reg_item'] + '\n' + 'Actual:' + value + '\n' + 'Expected:' +
                             struct['value_data'])
+                        '''
+    for item in fail:
+        arr2.append(item[0]['reg_key']+' '+item[0]['reg_item']+' '+item[1] +' '+item[0]['value_data'])
+    valori2.set(arr2)
 
     file.close()
     frame2 = Frame(main, bd=10, bg='#03161d', highlightthickness=3)
@@ -116,7 +128,9 @@ def check():
     text2.place(relx=0.07, rely=0.03, relwidth=0.4, relheight=0.9)
     text2.insert(END, '\n\n'.join(success))
 
-    listbox_fail = Listbox(frame2, bg="#e45149", font=myFont, fg="white", listvariable=valori, selectmode=MULTIPLE,
+
+
+    listbox_fail = Listbox(frame2, bg="#e45149", font=myFont, fg="white", listvariable=valori2, selectmode=MULTIPLE,
                            width=50, height=27, highlightthickness=3)
     listbox_fail.place(relx=0.5, rely=0.03, relwidth=0.4, relheight=0.9)
     listbox_fail.config(highlightbackground="white")
@@ -131,22 +145,7 @@ def check():
 
 #change contents
 def on_select_failed(evt):
-    global previous
-    global index
-    w = evt.widget
-    actual = w.curselection()
-
-    difference = [item for item in actual if item not in previous]
-    if len(difference) > 0:
-        index = [item for item in actual if item not in previous][0]
-    previous = w.curselection()
-
-    text.delete(1.0, END)
-    str = '\n'
-    for key in matching[index]:
-        str += key + ':' + matching[index][key] + '\n'
-    text.insert(END, str)
-
+    pass
 
 def entersearch(evt):
     search()
