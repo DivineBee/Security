@@ -42,6 +42,7 @@ arr2=[]
 
 def check():
 
+    global str
     print('Here')
     path = os.getcwd()
     print(path)
@@ -101,6 +102,7 @@ def check():
                         value = value + element + ' '
                     value = value[:len(value) - 1]  # last space we delete
                     # print('Value',value)
+                    struct['value_data']=hex(int(struct['value_data']))
                     p = re.compile('.*' + struct['value_data'] + '.*')
                     if p.match(value):
                         print('Patern:', struct['value_data'])
@@ -115,8 +117,9 @@ def check():
                             struct['reg_key'] + struct['reg_item'] + '\n' + 'Actual:' + value + '\n' + 'Expected:' +
                             struct['value_data'])
                         '''
-    for item in fail:
-        arr2.append(item[0]['reg_key']+' '+item[0]['reg_item']+' '+item[1] +' '+item[0]['value_data'])
+    for i in range(len(fail)):
+        item=fail[i]
+        arr2.append(' Item:' + item[0]['reg_item'] + ' Value:' + item[1] + ' Desired:' + item[0]['value_data'])
     valori2.set(arr2)
 
     file.close()
@@ -127,6 +130,8 @@ def check():
     text2 = Text(frame2, bg="#afca54", width=50, height=27.5, highlightthickness=3)
     text2.place(relx=0.07, rely=0.03, relwidth=0.4, relheight=0.9)
     text2.insert(END, '\n\n'.join(success))
+
+
 
 
 
@@ -142,6 +147,25 @@ def check():
     exit_btn = Button(frame2, text='Close', command=exit, bg="#03161d", fg="white", font=myFont, padx='10px',
                       pady='3px')
     exit_btn.place(relx=0.46, rely=0.95)
+
+    def changeFailures():
+        pass
+    def backup():
+        f=open('backup.txt','w')
+        backupString=json.dumps(fail)
+        f.write(backupString)
+        f.close()
+    changeBtn= Button(frame2, text='Change', command=changeFailures, bg="#03161d", fg="white", font=myFont, padx='10px',
+                      pady='3px')
+    changeBtn.place(relx=0.66, rely=0.95)
+
+    backupBtn = Button(frame2, text='Change', command=backup, bg="#03161d", fg="white", font=myFont,
+                       padx='10px',
+                       pady='3px')
+    backupBtn.place(relx=0.86, rely=0.95)
+
+
+
 
 #change contents
 def on_select_failed(evt):
