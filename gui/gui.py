@@ -42,42 +42,42 @@ arr2=[]
 
 def check():
 
-    global str
-    print('Here')
-    path = os.getcwd()
-    print(path)
-    out = subprocess.Popen(['secedit.exe', '/export', '/cfg', path + '\\security.txt'],
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.STDOUT)
-    output = out.communicate()[0]
-
-    print('Output:', output.decode('ascii', 'ignore'))
-    # os.system('secedit.exe /export /cfg '+path+'\\security.txt')
-    file = open('security.txt', 'r')
-    input = file.read()
-    san = ""
-    for i in input:
-        if i.isprintable() or i.isspace():
-            san += i
-    san = san.split('\n')
-    san = [x for x in san if len(x) > 0]
-
-    # print(san)
-    for str in san:
-        if '=' in str:
-            to_add = str[str.index('=') + 1:]
-            key_to_add = str[:str.index('=')]
-            resultvalue = ''
-            resultkey = ''
-            for char in to_add:
-                if char != ' ':
-                    resultvalue += char
-            for char in key_to_add:
-                if char != ' ':
-                    resultkey += char
-            SystemDict[resultkey] = resultvalue
-    print(SystemDict)
-    print(structure)
+    # global str
+    # print('Here')
+    # path = os.getcwd()
+    # print(path)
+    # out = subprocess.Popen(['secedit.exe', '/export', '/cfg', path + '\\security.txt'],
+    #                        stdout=subprocess.PIPE,
+    #                        stderr=subprocess.STDOUT)
+    # output = out.communicate()[0]
+    #
+    # print('Output:', output.decode('ascii', 'ignore'))
+    # # os.system('secedit.exe /export /cfg '+path+'\\security.txt')
+    # file = open('security.txt', 'r')
+    # input = file.read()
+    # san = ""
+    # for i in input:
+    #     if i.isprintable() or i.isspace():
+    #         san += i
+    # san = san.split('\n')
+    # san = [x for x in san if len(x) > 0]
+    #
+    # # print(san)
+    # for str in san:
+    #     if '=' in str:
+    #         to_add = str[str.index('=') + 1:]
+    #         key_to_add = str[:str.index('=')]
+    #         resultvalue = ''
+    #         resultkey = ''
+    #         for char in to_add:
+    #             if char != ' ':
+    #                 resultvalue += char
+    #         for char in key_to_add:
+    #             if char != ' ':
+    #                 resultkey += char
+    #         SystemDict[resultkey] = resultvalue
+    # print(SystemDict)
+    # print(structure)
 
     for struct in structure:
         if 'reg_key' in struct and 'reg_item' in struct and 'value_data' in struct:
@@ -102,6 +102,8 @@ def check():
                         value = value + element + ' '
                     value = value[:len(value) - 1]  # last space we delete
                     # print('Value',value)
+                    if struct['value_data'][:2]=='0x':
+                        struct['value_data']=struct['value_data'][2:]
                     struct['value_data']=hex(int(struct['value_data']))
                     p = re.compile('.*' + struct['value_data'] + '.*')
                     if p.match(value):
@@ -122,7 +124,7 @@ def check():
         arr2.append(' Item:' + item[0]['reg_item'] + ' Value:' + item[1] + ' Desired:' + item[0]['value_data'])
     valori2.set(arr2)
 
-    file.close()
+    #file.close()
     frame2 = Frame(main, bd=10, bg='#03161d', highlightthickness=3)
     frame2.config(highlightbackground="white")
     frame2.place(relx=0.5, rely=0.1, width=800, relwidth=0.4, relheight=0.8, anchor='n')
@@ -149,7 +151,43 @@ def check():
     exit_btn.place(relx=0.46, rely=0.95)
 
     def changeFailures():
-        pass
+        backup()
+        for i in range(len(fail)):
+            struct=fail[i][0]
+            query = 'reg add "' + struct ['reg_key'] + '" /v ' + struct ['reg_item'] +' /d "'+ struct['value_data']+ '" /f'
+            out = subprocess.Popen(query,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)
+            output = out.communicate() [0].decode('ascii', 'ignore')
+            str = ''
+            for char in output:
+                if char.isprintable() and char != '\n' and char != '\r':
+                    str += char
+            output = str
+            print(output)
+
+    def restore():
+        f=open('backup.txt')
+        fail=json.loads(f.read())
+        print(fail)
+        f.close()
+
+        for i in range(len(fail)):
+            struct=fail[i][0]
+            query = 'reg add ' + struct ['reg_key'] + ' /v ' + struct ['reg_item'] +' /d '+ fail[i][1]+ ' /f'
+            print('Query:',query)
+            out = subprocess.Popen(query,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)
+            output = out.communicate() [0].decode('ascii', 'ignore')
+            str = ''
+            for char in output:
+                if char.isprintable() and char != '\n' and char != '\r':
+                    str += char
+            output = str
+            print(output)
+
+
     def backup():
         f=open('backup.txt','w')
         backupString=json.dumps(fail)
@@ -159,7 +197,7 @@ def check():
                       pady='3px')
     changeBtn.place(relx=0.66, rely=0.95)
 
-    backupBtn = Button(frame2, text='Change', command=backup, bg="#03161d", fg="white", font=myFont,
+    backupBtn = Button(frame2, text='Restore', command=restore, bg="#03161d", fg="white", font=myFont,
                        padx='10px',
                        pady='3px')
     backupBtn.place(relx=0.86, rely=0.95)
