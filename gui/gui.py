@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 import glob
 import json
-import os
 import subprocess
 import tarfile
 from tkinter import *
-from tkinter import filedialog as fd, messagebox
+from tkinter import filedialog as fd
 from tkinter import ttk
 from tkinter.font import Font
 import requests
 import view_audit_structure
 import re
-from tkinter import filedialog
 
 global previous
 main = Tk()
@@ -39,89 +37,56 @@ unknown = []
 toChange=[]
 valori2=StringVar()
 arr2=[]
+arr2copy=[]
+
+failedselected=[]
+
+def make_query(struct):
+    query = 'reg query ' + struct ['reg_key'] + ' /v ' + struct ['reg_item']
+    out = subprocess.Popen(query,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT)
+    output = out.communicate() [0].decode('ascii', 'ignore')
+    str = ''
+    for char in output:
+        if char.isprintable() and char != '\n' and char != '\r':
+            str += char
+    output = str
+    output = output.split(' ')
+    output = [x for x in output if len(x) > 0]
+    value = ''
+    if 'ERROR' in output [0]:
+        unknown.append(struct ['reg_key'] + struct ['reg_item'])
+    for i in range(len(output)):
+        if 'REG_' in output [i]:
+            for element in output [i + 1:]:
+                value = value + element + ' '
+            value = value [:len(value) - 1]  # last space we delete
+            # print('Value',value)
+            if struct ['value_data'] [:2] == '0x':
+                struct ['value_data'] = struct ['value_data'] [2:]
+            struct ['value_data'] = hex(int(struct ['value_data']))
+            p = re.compile('.*' + struct ['value_data'] + '.*')
+            if p.match(value):
+                print('Patern:', struct ['value_data'])
+                print('Value:', value)
+                success.append(struct ['reg_key'] + struct ['reg_item'] + '\n' + 'Value:' + value)
+            else:
+                print('Did not pass: ', struct ['value_data'])
+                print('Value which did not pass: ', value)
+                fail.append([struct, value])
 
 def check():
 
-    # global str
-    # print('Here')
-    # path = os.getcwd()
-    # print(path)
-    # out = subprocess.Popen(['secedit.exe', '/export', '/cfg', path + '\\security.txt'],
-    #                        stdout=subprocess.PIPE,
-    #                        stderr=subprocess.STDOUT)
-    # output = out.communicate()[0]
-    #
-    # print('Output:', output.decode('ascii', 'ignore'))
-    # # os.system('secedit.exe /export /cfg '+path+'\\security.txt')
-    # file = open('security.txt', 'r')
-    # input = file.read()
-    # san = ""
-    # for i in input:
-    #     if i.isprintable() or i.isspace():
-    #         san += i
-    # san = san.split('\n')
-    # san = [x for x in san if len(x) > 0]
-    #
-    # # print(san)
-    # for str in san:
-    #     if '=' in str:
-    #         to_add = str[str.index('=') + 1:]
-    #         key_to_add = str[:str.index('=')]
-    #         resultvalue = ''
-    #         resultkey = ''
-    #         for char in to_add:
-    #             if char != ' ':
-    #                 resultvalue += char
-    #         for char in key_to_add:
-    #             if char != ' ':
-    #                 resultkey += char
-    #         SystemDict[resultkey] = resultvalue
-    # print(SystemDict)
-    # print(structure)
-
     for struct in structure:
         if 'reg_key' in struct and 'reg_item' in struct and 'value_data' in struct:
-            query = 'reg query ' + struct['reg_key'] + ' /v ' + struct['reg_item']
-            out = subprocess.Popen(query,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT)
-            output = out.communicate()[0].decode('ascii', 'ignore')
-            str = ''
-            for char in output:
-                if char.isprintable() and char != '\n' and char != '\r':
-                    str += char
-            output = str
-            output = output.split(' ')
-            output = [x for x in output if len(x) > 0]
-            value = ''
-            if 'ERROR' in output[0]:
-                unknown.append(struct['reg_key'] + struct['reg_item'])
-            for i in range(len(output)):
-                if 'REG_' in output[i]:
-                    for element in output[i + 1:]:
-                        value = value + element + ' '
-                    value = value[:len(value) - 1]  # last space we delete
-                    # print('Value',value)
-                    if struct['value_data'][:2]=='0x':
-                        struct['value_data']=struct['value_data'][2:]
-                    struct['value_data']=hex(int(struct['value_data']))
-                    p = re.compile('.*' + struct['value_data'] + '.*')
-                    if p.match(value):
-                        print('Patern:', struct['value_data'])
-                        print('Value:', value)
-                        success.append(struct['reg_key'] + struct['reg_item'] + '\n' + 'Value:' + value)
-                    else:
-                        print('Did not pass: ', struct['value_data'])
-                        print('Value which did not pass: ', value)
-                        fail.append( [struct,value])
-                        '''
-                        fail.append(
-                            struct['reg_key'] + struct['reg_item'] + '\n' + 'Actual:' + value + '\n' + 'Expected:' +
-                            struct['value_data'])
-                        '''
+            make_query(struct)
+
     for i in range(len(fail)):
         item=fail[i]
         arr2.append(' Item:' + item[0]['reg_item'] + ' Value:' + item[1] + ' Desired:' + item[0]['value_data'])
+        global arr2copy
+        arr2copy=arr2
     valori2.set(arr2)
 
     #file.close()
@@ -132,8 +97,6 @@ def check():
     text2 = Text(frame2, bg="#afca54", width=50, height=27.5, highlightthickness=3)
     text2.place(relx=0.07, rely=0.03, relwidth=0.4, relheight=0.9)
     text2.insert(END, '\n\n'.join(success))
-
-
 
 
 
@@ -151,10 +114,13 @@ def check():
     exit_btn.place(relx=0.46, rely=0.95)
 
     def changeFailures():
+        global arr2copy
+        global arr2
         backup()
-        for i in range(len(fail)):
-            struct=fail[i][0]
+        for i in range(len(failedselected)):
+            struct=failedselected[i][0]
             query = 'reg add "' + struct ['reg_key'] + '" /v ' + struct ['reg_item'] +' /d "'+ struct['value_data']+ '" /f'
+            print(query)
             out = subprocess.Popen(query,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT)
@@ -165,6 +131,8 @@ def check():
                     str += char
             output = str
             print(output)
+            valori2.set(arr2)
+            arr2copy=arr2
 
     def restore():
         f=open('backup.txt')
@@ -207,7 +175,27 @@ def check():
 
 #change contents
 def on_select_failed(evt):
-    pass
+    #global index
+    w = evt.widget
+    actual = w.curselection()
+
+    #difference = [item for item in actual if item not in previous]
+    #if len(difference) > 0:
+    #    index = [item for item in actual if item not in previous] [0]
+    #previous = w.curselection()
+    global failedselected
+    global arr2
+    failedselected=[]
+    for i in actual:
+        failedselected.append(fail[i])
+    localarr2=[]
+    for i in actual:
+        localarr2.append(arr2copy[i])
+    arr2=localarr2
+    arr2=[x for x in arr2copy if x not in arr2]
+    print(failedselected)
+
+
 
 def entersearch(evt):
     search()
@@ -292,10 +280,8 @@ def save_config():
     file = open(file_name, 'w')
     selection = lstbox.curselection()
     for i in selection:
-        # file.write(str(tofile))
         tofile.append(matching[i])
     json.dump(tofile, file)
-    # file.write(str(tofile))
     file.close()
 
 
